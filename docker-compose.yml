@@ -1,0 +1,27 @@
+# WireGuard VPN với giao diện web wg-easy (bản 14)
+# Khởi động:  docker compose up -d
+# Giao diện:  http://<IP-máy-chủ>:51821
+services:
+  wg-easy:
+    container_name: wg-easy
+    image: ghcr.io/wg-easy/wg-easy:14
+    environment:
+      WG_HOST: "${WG_HOST}"                 # IP public hoặc tên miền DDNS của nhà bạn
+      PASSWORD_HASH: "${PASSWORD_HASH}"     # mật khẩu giao diện web dạng bcrypt
+      WG_PORT: "51820"
+      WG_DEFAULT_ADDRESS: "10.8.0.x"        # dải IP cấp cho các máy khách VPN
+      WG_DEFAULT_DNS: "${WG_DNS}"           # trỏ về Pi-hole để lọc quảng cáo khi ở ngoài
+      WG_ALLOWED_IPS: "0.0.0.0/0"           # full tunnel: mọi lưu lượng đi qua VPN
+      WG_PERSISTENT_KEEPALIVE: "25"         # giữ kết nối khi máy khách nằm sau NAT
+    volumes:
+      - "./wg-data:/etc/wireguard"
+    ports:
+      - "51820:51820/udp"   # cổng WireGuard, cần port forward trên router
+      - "51821:51821/tcp"   # giao diện web, KHÔNG mở ra Internet
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped

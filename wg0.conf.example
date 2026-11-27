@@ -1,0 +1,28 @@
+# Cấu hình WireGuard thủ công (không dùng wg-easy) - để hiểu WireGuard hoạt động ra sao
+# Tạo cặp khóa:  wg genkey | tee server.key | wg pubkey > server.pub
+# KHÔNG BAO GIỜ đưa private key lên GitHub.
+
+# ===== /etc/wireguard/wg0.conf trên máy chủ =====
+[Interface]
+Address    = 10.8.0.1/24             # IP của máy chủ trong đường hầm VPN
+ListenPort = 51820
+PrivateKey = <SERVER_PRIVATE_KEY>
+# NAT: lưu lượng từ VPN đi ra LAN/Internet mang IP của máy chủ
+PostUp     = iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+PostDown   = iptables -t nat -D POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+
+[Peer]                               # điện thoại
+PublicKey  = <PHONE_PUBLIC_KEY>
+AllowedIPs = 10.8.0.2/32             # chỉ chấp nhận gói từ IP này trong đường hầm
+
+# ===== Cấu hình trên điện thoại =====
+# [Interface]
+# Address    = 10.8.0.2/32
+# PrivateKey = <PHONE_PRIVATE_KEY>
+# DNS        = 192.168.0.2           # Pi-hole
+#
+# [Peer]
+# PublicKey           = <SERVER_PUBLIC_KEY>
+# Endpoint            = vpn.ten-mien-ddns-cua-ban.net:51820
+# AllowedIPs          = 0.0.0.0/0     # full tunnel; chỉ vào LAN nhà thì dùng 192.168.0.0/24
+# PersistentKeepalive = 25

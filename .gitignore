@@ -1,0 +1,5 @@
+.env
+wg-data/
+*.key
+*.pub
+__pycache__/
